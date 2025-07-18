@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Lost Items{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Lost Items</h2>
+
+    {% if items %}
+        {% for item in items %}
+        <div class="card mb-3">
+            <div class="row g-0">
+                <div class="col-md-8">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ item.item_name }}</h5>
+                        <table class="table table-sm">
+                            <tr><th>Description</th><td>{{ item.description }}</td></tr>
+                            <tr><th>Location</th><td>{{ item.location }}</td></tr>
+                            <tr><th>Lost On</th><td>{{ item.lost_date or 'N/A' }}</td></tr>
+                            <tr><th>Status</th><td>{{ item.status | capitalize }}</td></tr>
+                        </table>
+                        <button class="btn btn-sm btn-outline-primary" onclick="showReporter('{{ item.reporter_name }}', '{{ item.reporter_phone }}')">Reported By</button>
+                    </div>
+                </div>
+                <div class="col-md-4 d-flex align-items-center justify-content-center">
+                    {% if item.image_filename %}
+                        <img src="{{ url_for('static', filename='uploads/' ~ item.image_filename) }}" class="img-fluid rounded" alt="Item Image" style="max-height: 180px;">
+                    {% else %}
+                        <p class="text-muted">No Image</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-center">No open lost items reported.</p>
+    {% endif %}
+</div>
+
+<!-- Reporter Modal -->
+<div id="reporterModal" class="modal" tabindex="-1" role="dialog" style="display: none;">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Reported By</h5>
+        <button type="button" class="close" onclick="closeModal()" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Name:</strong> <span id="reporterName"></span></p>
+        <p><strong>Phone:</strong> <span id="reporterPhone"></span></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    function showReporter(name, phone) {
+        document.getElementById("reporterName").innerText = name;
+        document.getElementById("reporterPhone").innerText = phone;
+        document.getElementById("reporterModal").style.display = "block";
+    }
+
+    function closeModal() {
+        document.getElementById("reporterModal").style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById("reporterModal");
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+</script>
+{% endblock %}

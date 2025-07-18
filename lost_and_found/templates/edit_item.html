@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit {{ item_type.capitalize() }} Item{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow rounded-4">
+        <div class="card-body">
+            <h2 class="card-title mb-4">Edit {{ item_type.capitalize() }} Item</h2>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="old_photo" value="{{ item['image_filename'] }}">
+                <input type="hidden" name="camera_image_data" id="camera_image_data">
+
+                <div class="mb-3">
+                    <label for="item_name" class="form-label">Item Name:</label>
+                    <input type="text" class="form-control" id="item_name" name="item_name" value="{{ item['item_name'] }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description:</label>
+                    <textarea class="form-control" id="description" name="description" rows="4" required>{{ item['description'] }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="location" class="form-label">Location:</label>
+                    <input type="text" class="form-control" id="location" name="location" value="{{ item['location'] }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="date" class="form-label">Date:</label>
+                    <input type="date" class="form-control" id="date" name="date"
+                           value="{{ item['lost_date'] if item_type == 'lost' else item['found_date'] }}"
+                           max="{{ current_date }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Current Photo:</label><br>
+                    {% if item['image_filename'] %}
+                        <img src="{{ url_for('static', filename='uploads/' ~ item['image_filename']) }}" alt="Current Photo" class="img-thumbnail" width="200">
+                    {% else %}
+                        <p class="text-muted">No photo available.</p>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Change Photo:</label><br>
+                    <button type="button" class="btn btn-outline-primary" onclick="openPhotoPopup()">Change Photo</button>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">New Photo Preview:</label><br>
+                    <img id="preview" src="#" alt="New Photo Preview" class="img-thumbnail" style="display: none;" width="200">
+                </div>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-success">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Photo Modal -->
+<div id="photoModal" class="modal" tabindex="-1" style="display: none;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Photo Source</h5>
+                <button type="button" class="btn-close" onclick="closePhotoPopup()"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex gap-2 mb-3">
+                    <button class="btn btn-primary" onclick="startCamera()">Camera</button>
+                    <button class="btn btn-secondary" onclick="chooseUpload()">Upload</button>
+                </div>
+
+                <div id="cameraContainer" class="mb-3" style="display:none;">
+                    <video id="camera" width="100%" autoplay class="border rounded-3"></video><br>
+                    <button class="btn btn-sm btn-outline-info mt-2" onclick="capturePhoto()">Capture</button>
+                </div>
+
+                <div id="uploadContainer" class="mb-3" style="display:none;">
+                    <input type="file" class="form-control" id="photoInput" accept="image/*" onchange="handleFile(event)">
+                </div>
+
+                <div>
+                    <h6>Preview:</h6>
+                    <img id="modalPreview" src="#" alt="Preview" class="img-thumbnail" style="display:none;" width="200">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="confirmPhoto()">Use This Photo</button>
+                <button class="btn btn-secondary" onclick="closePhotoPopup()">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentStream = null;
+    let preview = document.getElementById('preview');
+    let modalPreview = document.getElementById('modalPreview');
+    let cameraImageDataInput = document.getElementById('camera_image_data');
+
+    function openPhotoPopup() {
+        document.getElementById('photoModal').style.display = 'block';
+        modalPreview.style.display = 'none';
+        document.getElementById('cameraContainer').style.display = 'none';
+        document.getElementById('uploadContainer').style.display = 'none';
+    }
+
+    function closePhotoPopup() {
+        document.getElementById('photoModal').style.display = 'none';
+        if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
+        }
+    }
+
+    function startCamera() {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function(stream) {
+                currentStream = stream;
+                let video = document.getElementById('camera');
+                video.srcObject = stream;
+                document.getElementById('cameraContainer').style.display = 'block';
+                document.getElementById('uploadContainer').style.display = 'none';
+            })
+            .catch(function(err) {
+                alert("Camera access denied.");
+            });
+    }
+
+    function capturePhoto() {
+        let video = document.getElementById('camera');
+        let canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        let ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+
+        let dataUrl = canvas.toDataURL('image/png');
+        modalPreview.src = dataUrl;
+        modalPreview.style.display = 'block';
+
+        cameraImageDataInput.value = dataUrl;
+
+        if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
+        }
+    }
+
+    function chooseUpload() {
+        document.getElementById('uploadContainer').style.display = 'block';
+        document.getElementById('cameraContainer').style.display = 'none';
+    }
+
+    function handleFile(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            modalPreview.src = e.target.result;
+            modalPreview.style.display = 'block';
+            cameraImageDataInput.value = '';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function confirmPhoto() {
+        if (modalPreview.src && modalPreview.style.display !== 'none') {
+            preview.src = modalPreview.src;
+            preview.style.display = 'block';
+        }
+        closePhotoPopup();
+    }
+</script>
+{% endblock %}

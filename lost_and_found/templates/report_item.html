@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Report Item{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Report Item</h2>
+    <form method="POST" enctype="multipart/form-data" onsubmit="return validatePhotoSelection();">
+        <div class="mb-3">
+            <label class="form-label">Type:</label>
+            <select name="item_type" class="form-select" required>
+                <option value="lost">Lost</option>
+                <option value="found">Found</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Item Name:</label>
+            <input type="text" name="item_name" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Description:</label>
+            <textarea name="description" class="form-control" required></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Date:</label>
+            <input type="date" name="date" id="date" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Location:</label>
+            <input type="text" name="location" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Photo:</label><br>
+            <button type="button" class="btn btn-outline-primary" onclick="openPhotoPopup()">Select Photo</button>
+            <input type="file" id="uploadPhoto" name="image" accept="image/*" style="display: none;"><br><br>
+            <input type="hidden" name="photo_base64" id="photo_base64">
+
+            <div id="photoPreviewContainer" style="display: none;">
+                <strong>Preview:</strong><br>
+                <img id="photoPreview" src="#" class="img-fluid" style="max-width: 300px; border: 1px solid #ccc; padding: 5px;">
+            </div>
+        </div>
+
+        <div class="mb-3 text-center">
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+    </form>
+</div>
+
+<!-- Photo Selection Modal -->
+<div id="photoPopup" style="display: none; position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+    <div style="background: white; padding: 20px; margin: 100px auto; width: 300px; text-align: center;">
+        <p>Select Photo Option</p>
+        <button class="btn btn-outline-primary" onclick="selectCamera()">Camera</button>
+        <button class="btn btn-outline-secondary" onclick="selectUpload()">Upload</button>
+    </div>
+</div>
+
+<!-- Webcam Modal -->
+<div id="cameraModal" style="display: none; position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1100;">
+    <div style="background: white; padding: 20px; margin: 50px auto; width: 340px;">
+        <video id="video" autoplay class="w-100"></video><br>
+        <button class="btn btn-outline-primary" onclick="capturePhoto()">Capture</button>
+        <button class="btn btn-outline-danger" onclick="closeCamera()">Cancel</button>
+    </div>
+</div>
+
+<script>
+    function openPhotoPopup() {
+        document.getElementById("photoPopup").style.display = "block";
+    }
+
+    function selectUpload() {
+        document.getElementById("photoPopup").style.display = "none";
+        document.getElementById("uploadPhoto").click();
+    }
+
+    function selectCamera() {
+        document.getElementById("photoPopup").style.display = "none";
+        document.getElementById("cameraModal").style.display = "block";
+        navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+            document.getElementById("video").srcObject = stream;
+        }).catch(err => {
+            alert("Camera not accessible: " + err);
+        });
+    }
+
+    function capturePhoto() {
+        const video = document.getElementById("video");
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext("2d").drawImage(video, 0, 0);
+        const dataURL = canvas.toDataURL("image/png");
+
+        // Show preview
+        document.getElementById("photoPreview").src = dataURL;
+        document.getElementById("photoPreviewContainer").style.display = "block";
+        document.getElementById("photo_base64").value = dataURL;
+
+        // Stop webcam
+        const stream = video.srcObject;
+        const tracks = stream.getTracks();
+        tracks.forEach(track => track.stop());
+        video.srcObject = null;
+
+        document.getElementById("cameraModal").style.display = "none";
+    }
+
+    function closeCamera() {
+        const video = document.getElementById("video");
+        const stream = video.srcObject;
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            video.srcObject = null;
+        }
+        document.getElementById("cameraModal").style.display = "none";
+    }
+
+    document.getElementById("uploadPhoto").addEventListener("change", function () {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById("photoPreview").src = e.target.result;
+                document.getElementById("photoPreviewContainer").style.display = "block";
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    function validatePhotoSelection() {
+        const fileSelected = document.getElementById("uploadPhoto").files.length > 0;
+        const cameraCaptured = document.getElementById("photo_base64").value.trim() !== "";
+        if (!fileSelected && !cameraCaptured) {
+            alert("Please upload or capture a photo.");
+            return false;
+        }
+        return true;
+    }
+
+    // Set max date to today
+    document.addEventListener("DOMContentLoaded", function () {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById("date").max = today;
+    });
+
+    // Close popup if user clicks outside modal
+    window.onclick = function (event) {
+        if (event.target === document.getElementById("photoPopup")) {
+            document.getElementById("photoPopup").style.display = "none";
+        }
+        if (event.target === document.getElementById("cameraModal")) {
+            closeCamera();
+        }
+    };
+</script>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Welcome, {{ user.name }}</h2>
+
+    <!-- USER INFO -->
+    <h4>Your Details</h4>
+    <table class="table table-bordered w-50">
+        <tr><th>Name</th><td>{{ user.name }}</td></tr>
+        <tr><th>Phone</th><td>{{ user.phone }}</td></tr>
+    </table>
+    <p><a href="{{ url_for('edit_profile') }}" class="btn btn-sm btn-outline-primary">Edit Profile</a></p>
+
+    <hr>
+
+    <!-- LOST ITEMS -->
+    <h4>Your Reported Lost Items</h4>
+    {% if lost_items %}
+        {% for item in lost_items %}
+        <div class="card mb-3">
+            <div class="row g-0">
+                <div class="col-md-8">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ item.item_name }}</h5>
+                        <table class="table table-sm">
+                            <tr><th>Description</th><td>{{ item.description }}</td></tr>
+                            <tr><th>Location</th><td>{{ item.location }}</td></tr>
+                            <tr><th>Lost On</th><td>{{ item.lost_date }}</td></tr>
+                            <tr><th>Status</th><td>{{ item.status | capitalize }}</td></tr>
+                        </table>
+
+                        {% if item.status == 'open' %}
+                            <a href="{{ url_for('edit_item', item_id=item.lost_id, item_type='lost') }}" class="btn btn-sm btn-outline-info me-2">Edit</a>
+                            <a href="{{ url_for('mark_resolved', item_id=item.lost_id, item_type='lost') }}" class="btn btn-sm btn-outline-success me-2">Mark as Found</a>
+                            <form action="{{ url_for('delete_item', item_type='lost', item_id=item.lost_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this lost item?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        {% else %}
+                            <p>No further actions available for this item (Closed/Claimed).</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4 d-flex align-items-center justify-content-center">
+                    {% if item.image_filename %}
+                        <img src="{{ url_for('static', filename='uploads/' ~ item.image_filename) }}" class="img-fluid rounded" alt="Item Image" style="max-height: 180px;">
+                    {% else %}
+                        <p>No Image</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>No lost items reported.</p>
+    {% endif %}
+
+    <!-- FOUND ITEMS -->
+    <h4 class="mt-4">Your Reported Found Items</h4>
+    {% if found_items %}
+        {% for item in found_items %}
+        <div class="card mb-3">
+            <div class="row g-0">
+                <div class="col-md-8">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ item.item_name }}</h5>
+                        <table class="table table-sm">
+                            <tr><th>Description</th><td>{{ item.description }}</td></tr>
+                            <tr><th>Location</th><td>{{ item.location }}</td></tr>
+                            <tr><th>Found On</th><td>{{ item.found_date }}</td></tr>
+                            <tr><th>Status</th><td>{{ item.status | capitalize }}</td></tr>
+                        </table>
+
+                        {% if item.status == 'unclaimed' %}
+                            <a href="{{ url_for('edit_item', item_id=item.found_id, item_type='found') }}" class="btn btn-sm btn-outline-info me-2">Edit</a>
+                            <a href="{{ url_for('mark_resolved', item_id=item.found_id, item_type='found') }}" class="btn btn-sm btn-outline-success me-2">Mark as Returned</a>
+                            <form action="{{ url_for('delete_item', item_type='found', item_id=item.found_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this found item?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        {% else %}
+                            <p>No further actions available for this item (Closed/Claimed).</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4 d-flex align-items-center justify-content-center">
+                    {% if item.image_filename %}
+                        <img src="{{ url_for('static', filename='uploads/' ~ item.image_filename) }}" class="img-fluid rounded" alt="Item Image" style="max-height: 180px;">
+                    {% else %}
+                        <p>No Image</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>No found items reported.</p>
+    {% endif %}
+</div>
+{% endblock %}
