@@ -31,22 +31,39 @@ OOPS!Vault is a web-based Lost and Found Portal built using Flask and MySQL, des
 ## 📁 Project Structure
 
 OOPSVault/
+
 ├── static/
+
 │ └── uploads/ # Uploaded item images
+
 ├── templates/
+
 │ ├── base.html # Common layout
+
 │ ├── index.html # Homepage
+
 │ ├── login.html # Login page
+
 │ ├── signup.html # Signup page
+
 │ ├── report_item.html # Item reporting form
+
 │ ├── lost_items.html # Lost items list
+
 │ ├── found_items.html # Found items list
+
 │ ├── profile.html # User profile page
+
 │ ├── edit_item.html # Edit item details
+
 ├── app.py # Main Flask app
+
 ├── db_config.py # MySQL DB config
+
 ├── requirements.txt # Python dependencies
+
 └── README.md # Project description
+
 
 
 ---
