@@ -27,8 +27,8 @@ app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 # MySQL Configuration
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Anirudh@rnsit'  # Replace with your MySQL password
-app.config['MYSQL_DB'] = 'lost_and_found'
+app.config['MYSQL_PASSWORD'] = ''  # Replace with your MySQL password
+app.config['MYSQL_DB'] = ''   # Replace with your MySQL database name
 
 mysql = MySQL(app)
 
@@ -36,8 +36,8 @@ def get_db_connection():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="Anirudh@rnsit",
-        database="lost_and_found"
+        password="",      # Replace with your MySQL password
+        database=""       # Replace with your MySQL database name
     )
 
 
@@ -475,3 +475,4 @@ def logout():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
